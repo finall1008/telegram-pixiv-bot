@@ -11,7 +11,8 @@ from telegram import (
     InlineKeyboardMarkup,
     Update,
     Bot,
-    ParseMode
+    ParseMode,
+    InputMediaPhoto
 )
 from telegram.ext.dispatcher import run_async
 from pixivpy_async import AppPixivAPI
@@ -126,9 +127,13 @@ def send_illust_info(update, context):
                                              parse_mode=ParseMode.HTML)
     else:
         bot = Bot(TOKEN)
-        for file_dir in file_dirs:
-            bot.send_photo(chat_id=update.effective_chat.id,
-                           photo=open(file_dir, 'rb'))
+        files = [InputMediaPhoto(media=open(file_dir, 'rb'),
+                                 caption=msg_text,
+                                 parse_mode=ParseMode.HTML) for file_dir in file_dirs]
+        bot.send_media_group(chat_id=update.effective_chat.id, media=files)
+        # for file_dir in file_dirs:
+        #     bot.send_photo(chat_id=update.effective_chat.id,
+        #                    photo=open(file_dir, 'rb'))
         update.effective_message.reply_text(text=msg_text,
                                             reply_markup=origin_link(
                                                 illust_id),
