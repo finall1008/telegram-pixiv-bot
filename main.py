@@ -42,7 +42,7 @@ def parse_tags_text(tags: list) -> str:
     text = str()
     for tag in tags:
         text = text + \
-            f"[{tag.name}({tag.translated_name})](https://www.pixiv.net/tags/{tag.name}/artworks) "
+            f"<a href=\"https://www.pixiv.net/tags/{tag.name}/artworks\">{tag.name}({tag.translated_name})</a> "
     return text
 
 
@@ -77,7 +77,7 @@ async def parse_illust_info_msg(illust_id: int, aapi: AppPixivAPI):
     caption = str()
     if info.caption != "":
         caption = "\n" + info.caption
-    msg_text = f"标题：{info.title}\n作者：[{info.user.name}](https://www.pixiv.net/users/{info.user.id}){caption}\n标签：{parse_tags_text(info.tags)}"
+    msg_text = f"<b>标题：</b>{info.title}\n<b>作者：</b><a href=\"https://www.pixiv.net/users/{info.user.id}\">{info.user.name}</a>{caption}\n标签：{parse_tags_text(info.tags)}"
     logger.info(msg_text)
 
     if info.page_count == 1:
@@ -118,7 +118,10 @@ def send_illust_info(update, context):
                  filename for filename in os.listdir(DOWNLOAD_PATH+f"/{illust_id}")]
     if len(file_dirs) == 1:
         update.effective_message.reply_photo(photo=open(file_dirs[0], 'rb'),
-                                             caption=msg_text, reply_markup=origin_link(illust_id))
+                                             caption=msg_text,
+                                             reply_markup=origin_link(
+                                                 illust_id),
+                                             parse_mode=ParseMode.HTML)
     else:
         bot = Bot(TOKEN)
         for file_dir in file_dirs:
@@ -127,7 +130,8 @@ def send_illust_info(update, context):
         update.effective_message.reply_text(text=msg_text,
                                             reply_markup=origin_link(
                                                 illust_id),
-                                            disable_web_page_preview=True)
+                                            disable_web_page_preview=True,
+                                            parse_mode=ParseMode.HTML)
 
 
 async def init_appapi(aapi: AppPixivAPI):
