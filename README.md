@@ -17,7 +17,7 @@ python main.py
 
 ## 使用
 
-在群组中或与机器人私聊：/getpic $pixiv_id
+在群组中或与机器人私聊：`/getpic $pixiv_id`
 
 ## 配置
 

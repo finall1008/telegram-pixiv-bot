@@ -21,6 +21,7 @@ import json
 import sys
 import logging
 import asyncio
+from bs4 import BeautifulSoup
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -76,7 +77,8 @@ async def parse_illust_info_msg(illust_id: int, aapi: AppPixivAPI):
     info = json_result.illust
     caption = str()
     if info.caption != "":
-        caption = "\n" + info.caption
+        soup = BeautifulSoup(info.caption, "html.parser")
+        caption = "\n" + soup.get_text()
     msg_text = f"<b>标题：</b>{info.title}\n<b>作者：</b><a href=\"https://www.pixiv.net/users/{info.user.id}\">{info.user.name}</a>{caption}\n<b>标签：</b>{parse_tags_text(info.tags)}"
     logger.info(msg_text)
 
