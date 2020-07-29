@@ -161,14 +161,18 @@ if __name__ == "__main__":
 
     try:
         DOWNLOAD_PATH = config["download_path"]
+    except:
+        logger.info("非法的下载路径，使用当前目录/Download")
+        try:
+            os.mkdir("Download")
+        except FileExistsError:
+            pass
+        DOWNLOAD_PATH = os.curdir+"/Download"
+    else:
         try:
             os.mkdir(DOWNLOAD_PATH)
         except FileExistsError:
             pass
-    except:
-        logger.info("非法的下载路径，使用当前目录/Download")
-        os.mkdir("Download")
-        DOWNLOAD_PATH = os.curdir+"/Download"
 
     try:
         DOWNLOAD_SIZE = config["download_size"]
