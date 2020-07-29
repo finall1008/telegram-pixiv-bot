@@ -42,7 +42,7 @@ def parse_tags_text(tags: list) -> str:
     text = str()
     for tag in tags:
         text = text + \
-            f"[{tag.name}\({tag.translated_name}\)](https://www.pixiv.net/tags/{tag.name}/artworks) "
+            f"[{tag.name}({tag.translated_name})](https://www.pixiv.net/tags/{tag.name}/artworks) "
     return text
 
 
@@ -77,7 +77,7 @@ async def parse_illust_info_msg(illust_id: int, aapi: AppPixivAPI):
     caption = str()
     if info.caption != "":
         caption = "\n" + info.caption
-    msg_text = f"**标题：**{info.title}\n**作者：**[{info.user.name}](https://www.pixiv.net/users/{info.user.id}){caption}\n**标签：**{parse_tags_text(info.tags)}"
+    msg_text = f"标题：{info.title}\n作者：[{info.user.name}](https://www.pixiv.net/users/{info.user.id}){caption}\n标签：{parse_tags_text(info.tags)}"
     logger.info(msg_text)
 
     if info.page_count == 1:
@@ -103,7 +103,11 @@ def send_illust_info(update, context):
             os.removedirs(sub_dir)
         logger.info("已清除下载目录")
 
-    illust_id = int(context.args[0])
+    try:
+        illust_id = int(context.args[0])
+    except:
+        update.effective_message.reply_text("用法：/getpic $pixiv_id")
+        return
     # msg_text = parse_illust_info_msg(illust_id, aapi)
     loop = asyncio.new_event_loop()
     illust_urls, illust_id, msg_text = loop.run_until_complete(
@@ -114,7 +118,7 @@ def send_illust_info(update, context):
                  filename for filename in os.listdir(DOWNLOAD_PATH+f"/{illust_id}")]
     if len(file_dirs) == 1:
         update.effective_message.reply_photo(photo=open(file_dirs[0], 'rb'),
-                                             caption=msg_text, reply_markup=origin_link(illust_id), parse_mode=ParseMode.MARKDOWN_V2)
+                                             caption=msg_text, reply_markup=origin_link(illust_id))
     else:
         bot = Bot(TOKEN)
         for file_dir in file_dirs:
@@ -123,7 +127,6 @@ def send_illust_info(update, context):
         update.effective_message.reply_text(text=msg_text,
                                             reply_markup=origin_link(
                                                 illust_id),
-                                            parse_mode=ParseMode.MARKDOWN_V2,
                                             disable_web_page_preview=True)
 
 
