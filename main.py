@@ -99,6 +99,12 @@ def get_dir_size(dir):
 
 @run_async
 def send_illust_info(update, context):
+    loop = asyncio.new_event_loop()
+    login_result = loop.run_until_complete(init_appapi(aapi))
+    loop.close()
+    if not login_result:
+        return
+
     if get_dir_size(DOWNLOAD_PATH) >= DOWNLOAD_SIZE:
         for sub_dir in os.listdir(DOWNLOAD_PATH):
             for filename in os.listdir(f"{DOWNLOAD_PATH}/{sub_dir}"):
@@ -146,9 +152,10 @@ async def init_appapi(aapi: AppPixivAPI):
         await aapi.login(username=USERNAME, password=PASSWORD)
     except:
         logger.exception("Pixiv 登陆失败")
-        sys.exit(1)
+        return False
     logger.info("成功登录 Pixiv")
     aapi.set_accept_language("zh-CN")
+    return True
 
 
 if __name__ == "__main__":
@@ -209,9 +216,9 @@ if __name__ == "__main__":
     dispatcher = updater.dispatcher
 
     aapi = AppPixivAPI()
-    loop = asyncio.new_event_loop()
-    loop.run_until_complete(init_appapi(aapi))
-    loop.close()
+    #loop = asyncio.new_event_loop()
+    #loop.run_until_complete(init_appapi(aapi))
+    #loop.close()
 
     commands = [("start", "检查运行状态"), ("getpic", "使用 id 获取 pixiv 图片预览及详情")]
     updater.bot.set_my_commands(commands)
