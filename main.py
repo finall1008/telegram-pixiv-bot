@@ -15,6 +15,7 @@ from telegram import (
     InputMediaPhoto
 )
 from telegram.ext.dispatcher import run_async
+from telegram.error import NetworkError
 from pixivpy_async import AppPixivAPI
 import os
 from os.path import join, getsize
@@ -136,10 +137,24 @@ def send_illust_info(update, context):
         files = [InputMediaPhoto(media=open(file_dir, 'rb'),
                                  caption=msg_text,
                                  parse_mode=ParseMode.HTML) for file_dir in file_dirs]
-        bot.send_media_group(chat_id=update.effective_chat.id, media=files)
-        # for file_dir in file_dirs:
-        #     bot.send_photo(chat_id=update.effective_chat.id,
-        #                    photo=open(file_dir, 'rb'))
+        try:
+            bot.send_media_group(chat_id=update.effective_chat.id, media=files)
+        except NetworkError as e:
+            if str(e).find("File too large"):
+                tmp_sub_file_group = list()
+                tmp_size = int()
+                sub_file_groups = list()
+                for file in files:
+                    if tmp_size + os.path.getsize(file) <= 10485760:
+                        tmp_size = tmp_size + os.path.getsize(file)
+                        tmp_sub_file_group.append(file)
+                    else:
+                        sub_file_groups.append(tmp_sub_file_group)
+                        tmp_sub_file_group = [file]
+                        tmp_size = os.path.getsize(file)
+                for file_group in sub_file_groups:
+                    bot.send_media_group(
+                        chat_id=update.effective_chat.id, media=file_group)
         update.effective_message.reply_text(text=msg_text,
                                             reply_markup=origin_link(
                                                 illust_id),
@@ -217,8 +232,8 @@ if __name__ == "__main__":
 
     aapi = AppPixivAPI()
     #loop = asyncio.new_event_loop()
-    #loop.run_until_complete(init_appapi(aapi))
-    #loop.close()
+    # loop.run_until_complete(init_appapi(aapi))
+    # loop.close()
 
     commands = [("start", "检查运行状态"), ("getpic", "使用 id 获取 pixiv 图片预览及详情")]
     updater.bot.set_my_commands(commands)
