@@ -134,27 +134,24 @@ def send_illust_info(update, context):
                                              parse_mode=ParseMode.HTML)
     else:
         bot = Bot(TOKEN)
-        files = [InputMediaPhoto(media=open(file_dir, 'rb'),
-                                 caption=msg_text,
-                                 parse_mode=ParseMode.HTML) for file_dir in file_dirs]
-        try:
-            bot.send_media_group(chat_id=update.effective_chat.id, media=files)
-        except NetworkError as e:
-            if str(e).find("File too large"):
-                tmp_sub_file_group = list()
-                tmp_size = int()
-                sub_file_groups = list()
-                for file in files:
-                    if tmp_size + os.path.getsize(file) <= 10485760:
-                        tmp_size = tmp_size + os.path.getsize(file)
-                        tmp_sub_file_group.append(file)
-                    else:
-                        sub_file_groups.append(tmp_sub_file_group)
-                        tmp_sub_file_group = [file]
-                        tmp_size = os.path.getsize(file)
-                for file_group in sub_file_groups:
-                    bot.send_media_group(
-                        chat_id=update.effective_chat.id, media=file_group)
+        tmp_sub_file_group = list()
+        tmp_size = 0
+        sub_file_groups = list()
+        for file_dir in file_dirs:
+            if tmp_size + os.path.getsize(file_dir) <= 5242880 and len(tmp_sub_file_group) + 1 <= 10:
+                tmp_sub_file_group.append(InputMediaPhoto(media=open(file_dir, 'rb'),
+                                                          caption=msg_text,
+                                                          parse_mode=ParseMode.HTML))
+            else:
+                sub_file_groups.append(tmp_sub_file_group)
+                tmp_sub_file_group = [InputMediaPhoto(media=open(file_dir, 'rb'),
+                                                      caption=msg_text,
+                                                      parse_mode=ParseMode.HTML)]
+                tmp_size = os.path.getsize(file_dir)
+        sub_file_groups.append(tmp_sub_file_group)
+        for sub_file_group in sub_file_groups:
+            bot.send_media_group(chat_id=update.effective_chat.id,
+                                 media=sub_file_group)
         update.effective_message.reply_text(text=msg_text,
                                             reply_markup=origin_link(
                                                 illust_id),
@@ -231,7 +228,7 @@ if __name__ == "__main__":
     dispatcher = updater.dispatcher
 
     aapi = AppPixivAPI()
-    #loop = asyncio.new_event_loop()
+    # loop = asyncio.new_event_loop()
     # loop.run_until_complete(init_appapi(aapi))
     # loop.close()
 
