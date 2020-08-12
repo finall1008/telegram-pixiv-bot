@@ -1,10 +1,6 @@
 from telegram.ext import (
-    CallbackQueryHandler,
     CommandHandler,
-    Filters,
-    MessageHandler,
     Updater,
-    CallbackContext
 )
 from telegram import (
     InlineKeyboardButton,
@@ -44,8 +40,12 @@ def start(update, context):
 def parse_tags_text(tags: list) -> str:
     text = str()
     for tag in tags:
+        if tag.translated_name:
+            translated_name = f"({tag.translated_name})"
+        else:
+            translated_name = ""
         text = text + \
-            f"<a href=\"https://www.pixiv.net/tags/{tag.name}/artworks\">{tag.name}({tag.translated_name})</a> "
+            f"<a href=\"https://www.pixiv.net/tags/{tag.name}/artworks\">{tag.name}{translated_name}</a> "
     return text
 
 
@@ -215,7 +215,7 @@ if __name__ == "__main__":
             except FileExistsError:
                 pass
             except:
-                logger.exception("非法的下载路径")
+                logger.exception("下载路径不可用")
                 sys.exit(1)
 
     try:
