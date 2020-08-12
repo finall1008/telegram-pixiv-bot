@@ -236,6 +236,7 @@ if __name__ == "__main__":
     updater.bot.set_my_commands(commands)
 
     dispatcher.add_handler(CommandHandler("getpic", send_illust_info))
+    dispatcher.add_handler(CommandHandler("start", start))
 
     updater.start_polling()
     logger.info(f"Bot @{updater.bot.get_me().username} 已启动")
