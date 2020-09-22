@@ -1,6 +1,6 @@
 # telegram-pixiv-bot
 [![Require: Python 3.8](https://img.shields.io/badge/Python-3.8-blue)](https://www.python.org/)
-[![Require: python-telegram-bot >= 12.8](https://img.shields.io/badge/python--telegram--bot-%3E%3D%2012.6.1-blue)](https://github.com/python-telegram-bot/python-telegram-bot)
+[![Require: python-telegram-bot >= 12.8](https://img.shields.io/badge/python--telegram--bot-%3E%3D%2012.8-blue)](https://github.com/python-telegram-bot/python-telegram-bot)
 
 
 一个简单的 Pixiv 返图机器人。
@@ -17,7 +17,10 @@ python main.py
 
 ## 使用
 
-在群组中或与机器人私聊：`/getpic $pixiv_id`
+在群组中或与机器人私聊：
+
+- `/getpic $pixiv_id`：获取插画全部分 P 的预览和详情，包括标题、作者、简介和标签
+- `/getfile $pixiv_id (all)`：获取插画的原始图片。在群聊中默认只发送第一张，增加 `all` 参数来解除这个限制
 
 ## 配置
 

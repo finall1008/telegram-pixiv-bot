@@ -57,3 +57,39 @@ def send_illust(update: Update, context):
                                              parse_mode=ParseMode.HTML)
 
     logger.info(f"成功发送 {illust.id}")
+
+@run_async
+def send_illust_file(update: Update, context):
+    try:
+        illust_id = int(context.args[0])
+    except:
+        update.effective_message.reply_text("用法：/getfile $pixiv_id")
+        return
+
+    force_send_all = False
+    try:
+        arg1 = str(context.args[1])
+    except:
+        pass
+    else:
+        if arg1 == "all":
+            force_send_all = True
+
+    try:
+        illust = Illust(illust_id)
+    except IllustInitError:
+        return
+
+    illust.download_original()
+
+    images = illust.get_downloaded_images()
+
+    if force_send_all or len(images) > 1 and update.effective_chat.type == "private":
+        page = 0
+        for image in images:
+            update.effective_message.reply_document(InputFile(BytesIO(image)))
+            page = page + 1
+    else:
+        update.effective_message.reply_document(InputFile(BytesIO(images[0])))
+
+    logger.info(f"成功发送 {illust.id} 原始文件")

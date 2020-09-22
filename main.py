@@ -2,7 +2,7 @@ import logging
 
 from telegram.ext import CommandHandler, Updater
 
-from commands import start, send_illust
+from commands import start, send_illust, send_illust_file
 from config import config
 
 logging.basicConfig(
@@ -16,10 +16,15 @@ if __name__ == "__main__":
     updater = Updater(token=config.TOKEN, use_context=True)
     dispatcher = updater.dispatcher
 
-    commands = [("start", "检查运行状态"), ("getpic", "使用 id 获取 pixiv 图片预览及详情")]
+    commands = [
+        ("start", "检查运行状态"),
+        ("getpic", "使用 id 获取 pixiv 插画预览及详情"),
+        ("getfile", "使用 id 获取 pixiv 插画原图。在非私聊中默认发送第一张，加上 all 参数解除限制")
+        ]
     updater.bot.set_my_commands(commands)
 
     dispatcher.add_handler(CommandHandler("getpic", send_illust))
+    dispatcher.add_handler(CommandHandler("getfile", send_illust_file))
     dispatcher.add_handler(CommandHandler("start", start))
 
     updater.start_polling()

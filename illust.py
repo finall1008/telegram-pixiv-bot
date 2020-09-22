@@ -48,9 +48,12 @@ class Illust:
 
             if info.page_count == 1:
                 self.urls = [info.image_urls.large]
+                self.original_urls = [info.meta_single_page.original_image_url]
             else:
                 self.urls = [
                     page.image_urls.large for page in info.meta_pages]
+                self.original_urls = [
+                    page.image_urls.original for page in info.meta_pages]
 
             return True
 
@@ -99,13 +102,20 @@ class Illust:
 
         logger.info(f"成功下载 {self.id} {size_hint} 第 {page_hint} 张")
 
-    def download(self):
+    def __download_images(self, original: bool = False):
         page = 0
         loop = asyncio.new_event_loop()
 
+        if not original:
+            urls = self.urls
+            size_hint = "large"
+        else:
+            urls = self.original_urls
+            size_hint = "original"
+
         tasks = list()
-        for url in self.urls:
-            tasks.append(self.__download_single_image(url, "large", page))
+        for url in urls:
+            tasks.append(self.__download_single_image(url, size_hint, page))
             page = page + 1
 
         try:
@@ -115,7 +125,13 @@ class Illust:
         finally:
             loop.close()
 
-        logger.info(f"成功下载 {self.id} 全部 Large 图片")
+        logger.info(f"成功下载 {self.id} 全部 {size_hint} 图片")
+
+    def download(self):
+        self.__download_images()
+
+    def download_original(self):
+        self.__download_images(True)
 
     def get_downloaded_images(self):
         if not len(self.__images):
