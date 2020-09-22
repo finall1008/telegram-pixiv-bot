@@ -1,6 +1,6 @@
 # telegram-pixiv-bot
 [![Require: Python 3.8](https://img.shields.io/badge/Python-3.8-blue)](https://www.python.org/)
-[![Require: python-telegram-bot >= 12.8](https://img.shields.io/badge/python--telegram--bot-%3E%3D%2012.6.1-blue)](https://github.com/python-telegram-bot/python-telegram-bot)
+[![Require: python-telegram-bot >= 12.8](https://img.shields.io/badge/python--telegram--bot-%3E%3D%2012.8-blue)](https://github.com/python-telegram-bot/python-telegram-bot)
 
 
 一个简单的 Pixiv 返图机器人。
