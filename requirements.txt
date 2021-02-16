@@ -1,3 +1,4 @@
-pixivpy-async
-python-telegram-bot >= 12.8
+pixivpy-async >= 1.2.12
+python-telegram-bot >= 13.2
 bs4
+aiohttp-socks

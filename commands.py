@@ -6,7 +6,7 @@ from telegram import Bot, ParseMode, Update, InputFile, InputMediaPhoto
 from telegram.ext.dispatcher import run_async
 
 from illust import Illust
-from utilities import get_dir_size, origin_link_button
+from utilities import origin_link_button
 from config import config
 from errors import IllustInitError
 
@@ -23,7 +23,6 @@ def start(update, context):
         "一个简单的 Pixiv 返图机器人。\nBy @finall_1008\n源代码：https://github.com/finall1008/telegram-pixiv-bot")
 
 
-@run_async
 def send_illust(update: Update, context):
     try:
         illust_id = int(context.args[0])
@@ -58,7 +57,7 @@ def send_illust(update: Update, context):
 
     logger.info(f"成功发送 {illust.id}")
 
-@run_async
+
 def send_illust_file(update: Update, context):
     try:
         illust_id = int(context.args[0])

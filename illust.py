@@ -17,12 +17,12 @@ logger = logging.getLogger("pixiv_bot")
 
 class Illust:
 
-    aapi = AppPixivAPI()
+    aapi = AppPixivAPI(env=True)
 
     def __init__(self, illust_id: int):
         async def init_appapi() -> bool:
             try:
-                await self.aapi.login(username=config.USERNAME, password=config.PASSWORD)
+                await self.aapi.login(refresh_token=config.REFRESH_TOKEN)
             except:
                 return False
             self.aapi.set_accept_language("zh-CN")
@@ -95,7 +95,7 @@ class Illust:
             raise DownloadError
 
         if type is not None and type.find("image") != -1:
-            self.__images.append(content)
+            self.__images.append((page_hint, content))
         else:
             logger.exception(f"{self.id} {size_hint} 第 {page_hint} 张下载错误")
             raise DownloadError
@@ -137,4 +137,6 @@ class Illust:
         if not len(self.__images):
             return None
 
-        return self.__images[:9] if len(self.__images) > 10 else self.__images
+        self.__images.sort(key=lambda elem: elem[0])
+
+        return [elem[1] for elem in self.__images[:9]]

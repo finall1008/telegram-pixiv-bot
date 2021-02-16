@@ -23,15 +23,9 @@ class Config:
             sys.exit(1)
 
         try:
-            self.USERNAME = config["username"]
+            self.REFRESH_TOKEN = config["refresh_token"]
         except:
-            logger.exception(f"非法的用户名")
-            sys.exit(1)
-
-        try:
-            self.PASSWORD = config["password"]
-        except:
-            logger.exception(f"非法的密码")
+            logger.exception(f"非法的 refresh_token。如果您不知道这是什么，请查看文档")
             sys.exit(1)
 
 
