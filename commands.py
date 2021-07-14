@@ -1,13 +1,11 @@
 import logging
-import os
 from io import BytesIO
 
-from telegram import Bot, ParseMode, Update, InputFile, InputMediaPhoto
-from telegram.ext.dispatcher import run_async
+from telegram import ParseMode, Update, InputFile, InputMediaPhoto
+from telegram.ext import CallbackContext
 
 from illust import Illust
-from utilities import origin_link_button
-from config import config
+from utilities import origin_link_button, get_illust_id
 from errors import IllustInitError
 
 
@@ -18,16 +16,15 @@ logging.basicConfig(
 logger = logging.getLogger("pixiv_bot")
 
 
-def start(update, context):
+def start(update: Update, context: CallbackContext):
     update.effective_message.reply_text(
-        "一个简单的 Pixiv 返图机器人。\nBy @finall_1008\n源代码：https://github.com/finall1008/telegram-pixiv-bot")
+        "一个简单的 Pixiv 返图机器人，请通过指令或 inline 来使用。\nBy @finall_1008\n源代码：https://github.com/finall1008/telegram-pixiv-bot")
 
 
-def send_illust(update: Update, context):
-    try:
-        illust_id = int(context.args[0])
-    except:
-        update.effective_message.reply_text("用法：/getpic $pixiv_id")
+def send_illust(update: Update, context: CallbackContext):
+    illust_id = get_illust_id(context.args[0])
+    if illust_id == -1:
+        update.effective_message.reply_text("用法：/getpic *Pixiv ID 或链接*")
         return
 
     try:
@@ -40,9 +37,8 @@ def send_illust(update: Update, context):
     images = illust.get_downloaded_images()
 
     if len(images) > 1:
-        bot = Bot(config.TOKEN)
-        bot.send_media_group(chat_id=update.effective_chat.id, media=[
-                             InputMediaPhoto(BytesIO(image)) for image in images])
+        context.bot.send_media_group(chat_id=update.effective_chat.id, media=[
+            InputMediaPhoto(BytesIO(image)) for image in images])
         update.effective_message.reply_text(text=str(illust),
                                             reply_markup=origin_link_button(
                                                 illust_id),
@@ -58,11 +54,10 @@ def send_illust(update: Update, context):
     logger.info(f"成功发送 {illust.id}")
 
 
-def send_illust_file(update: Update, context):
-    try:
-        illust_id = int(context.args[0])
-    except:
-        update.effective_message.reply_text("用法：/getfile $pixiv_id")
+def send_illust_file(update: Update, context: CallbackContext):
+    illust_id = get_illust_id(context.args[0])
+    if illust_id == -1:
+        update.effective_message.reply_text("用法：/getfile *Pixiv ID 或链接*")
         return
 
     force_send_all = False

@@ -35,6 +35,8 @@ class Illust:
                 return False
 
             info = json_result.illust
+            if not info:
+                return False
 
             self.caption = str()
             if info.caption != "":
@@ -47,9 +49,15 @@ class Illust:
             self.tags = [(tag.name, tag.translated_name) for tag in info.tags]
 
             if info.page_count == 1:
+                self.thumb_urls = [info.image_urls.square_medium]
+                self.mid_urls = [info.image_urls.medium]
                 self.urls = [info.image_urls.large]
                 self.original_urls = [info.meta_single_page.original_image_url]
             else:
+                self.thumb_urls = [
+                    page.image_urls.square_medium for page in info.meta_pages]
+                self.mid_urls = [
+                    page.image_urls.medium for page in info.meta_pages]
                 self.urls = [
                     page.image_urls.large for page in info.meta_pages]
                 self.original_urls = [
