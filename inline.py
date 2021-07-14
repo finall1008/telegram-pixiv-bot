@@ -34,7 +34,6 @@ def inline_answer(update: Update, context: CallbackContext):
             )]
         )
         return
-    print(illust_id)
 
     try:
         illust = Illust(illust_id)
@@ -56,6 +55,7 @@ def inline_answer(update: Update, context: CallbackContext):
             )
         )
 
-    context.bot.answer_inline_query(update.inline_query.id, results)
+    context.bot.answer_inline_query(
+        update.inline_query.id, results, cache_time=600)
 
     logger.info(f"成功返回 inline 结果 {illust.id}")
