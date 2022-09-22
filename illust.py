@@ -1,9 +1,9 @@
 import asyncio
 import logging
+from typing import List, Tuple
 
 from bs4 import BeautifulSoup
 from pixivpy_async import AppPixivAPI
-from pixivpy_async.net import Net
 
 from config import config
 from errors import DownloadError, GetInfoError, LoginError
@@ -18,8 +18,20 @@ logger = logging.getLogger("pixiv_bot")
 class Illust:
 
     aapi = AppPixivAPI(env=True)
+    loop = asyncio.new_event_loop()
 
     def __init__(self, illust_id: int):
+        self.caption: str
+        self.title: str
+        self.author: Tuple[str, int]
+        self.tags: List[Tuple[str, str]]
+        self.thumb_urls: List[str]
+        self.mid_urls: List[str]
+        self.urls: List[str]
+        self.original_urls: List[str]
+
+        asyncio.set_event_loop(self.loop)
+
         async def init_appapi() -> bool:
             try:
                 await self.aapi.login(refresh_token=config.REFRESH_TOKEN)
@@ -75,7 +87,7 @@ class Illust:
 
         self.id: int = illust_id
 
-        self.__images: list = list()
+        self.__images: List[Tuple[int, bytes]] = list()
 
         loop = asyncio.new_event_loop()
         get_info_result = loop.run_until_complete(get_info())
@@ -96,13 +108,19 @@ class Illust:
         return f"<b>标题：</b>{self.title}\n<b>作者：</b><a href=\"https://www.pixiv.net/users/{self.author[1]}\">{self.author[0]}</a>\n<b>简介：</b>{self.caption}\n<b>标签：</b>{tags_text}"
 
     async def __download_single_image(self, url: str, size_hint: str, page_hint: int):
+        tp: str
+        content: bytes
         try:
-            content, type = await self.aapi.down(url, "https://app-api.pixiv.net/")
+            result = []
+            #! aapi.down 是一个返回 AsyncGenerator 的 Coroutine，类型检查有误
+            async for v in await self.aapi.down(url, "https://app-api.pixiv.net/", True):  # type: ignore
+                result.append(v)
+            tp,content = result
         except:
             logger.exception(f"{self.id} {size_hint} 第 {page_hint} 张下载错误")
             raise DownloadError
 
-        if type is not None and type.find("image") != -1:
+        if tp is not None and tp.find("image") != -1:
             self.__images.append((page_hint, content))
         else:
             logger.exception(f"{self.id} {size_hint} 第 {page_hint} 张下载错误")
@@ -112,7 +130,6 @@ class Illust:
 
     def __download_images(self, original: bool = False):
         page = 0
-        loop = asyncio.new_event_loop()
 
         if not original:
             urls = self.urls
@@ -127,11 +144,9 @@ class Illust:
             page = page + 1
 
         try:
-            loop.run_until_complete(asyncio.gather(*tasks, loop=loop))
+            self.loop.run_until_complete(asyncio.gather(*tasks))
         except DownloadError:
             pass
-        finally:
-            loop.close()
 
         logger.info(f"成功下载 {self.id} 全部 {size_hint} 图片")
 

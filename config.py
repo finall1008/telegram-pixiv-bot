@@ -1,7 +1,7 @@
-import os
 import json
 import sys
 import logging
+from typing import TypedDict
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -10,11 +10,15 @@ logging.basicConfig(
 logger = logging.getLogger("pixiv_bot")
 
 
+class ConfigDict(TypedDict):
+    token: str
+    refresh_token: str
+
 class Config:
 
     def __init__(self):
         with open('config.json', 'r') as file:
-            config = json.load(file)
+            config: ConfigDict = json.load(file)
 
         try:
             self.TOKEN = config["token"]

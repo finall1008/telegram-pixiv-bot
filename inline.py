@@ -47,7 +47,7 @@ def inline_answer(update: Update, context: CallbackContext):
                 id=str(uuid4()),
                 caption=str(illust),
                 reply_markup=origin_link_button(illust_id),
-                title=illust_id,
+                title=str(illust_id),
                 description=str(illust),
                 photo_url=illust.mid_urls[index],
                 thumb_url=illust.thumb_urls[index],

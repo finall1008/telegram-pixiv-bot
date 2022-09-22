@@ -17,11 +17,15 @@ logger = logging.getLogger("pixiv_bot")
 
 
 def start(update: Update, context: CallbackContext):
-    update.effective_message.reply_text(
-        "一个简单的 Pixiv 返图机器人，请通过指令或 inline 来使用。\nBy @finall_1008\n源代码：https://github.com/finall1008/telegram-pixiv-bot")
+    if update.effective_message:
+        update.effective_message.reply_text(
+            "一个简单的 Pixiv 返图机器人，请通过指令或 inline 来使用。\nBy @finall_1008\n源代码：https://github.com/finall1008/telegram-pixiv-bot")
 
 
 def send_illust(update: Update, context: CallbackContext):
+    if not context.args or not update.effective_message or not update.effective_chat:
+        return
+
     illust_id = get_illust_id(context.args[0])
     if illust_id == -1:
         update.effective_message.reply_text("用法：/getpic *Pixiv ID 或链接*")
@@ -33,8 +37,10 @@ def send_illust(update: Update, context: CallbackContext):
         return
 
     illust.download()
-
     images = illust.get_downloaded_images()
+    if not images:
+        logger.exception(f"{update.effective_chat} 请求的 {illust_id} 下载错误")
+        return
 
     if len(images) > 1:
         context.bot.send_media_group(chat_id=update.effective_chat.id, media=[
@@ -55,6 +61,9 @@ def send_illust(update: Update, context: CallbackContext):
 
 
 def send_illust_file(update: Update, context: CallbackContext):
+    if not context.args or not update.effective_message or not update.effective_chat:
+        return
+
     illust_id = get_illust_id(context.args[0])
     if illust_id == -1:
         update.effective_message.reply_text("用法：/getfile *Pixiv ID 或链接*")
@@ -75,8 +84,10 @@ def send_illust_file(update: Update, context: CallbackContext):
         return
 
     illust.download_original()
-
     images = illust.get_downloaded_images()
+    if not images:
+        logger.exception(f"{update.effective_chat} 请求的 {illust_id} 下载错误")
+        return
 
     if force_send_all or len(images) > 1 and update.effective_chat.type == "private":
         page = 0
