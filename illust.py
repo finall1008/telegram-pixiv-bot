@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import mimetypes
 
 from bs4 import BeautifulSoup
 from pixivpy_async import AppPixivAPI
@@ -16,6 +17,19 @@ logger = logging.getLogger("pixiv_bot")
 
 class Illust:
     aapi = AppPixivAPI(env=True)
+
+    def __init__(self, illust_id: int) -> None:
+        self.caption: str
+        self.title: str
+        self.author: tuple[str, int]
+        self.tags: list[tuple[str, str]]
+        self.thumb_urls: list[str]
+        self.mid_urls: list[str]
+        self.urls: list[str]
+        self.original_urls: list[str]
+        self.id: int = illust_id
+        # index, extension, data
+        self.__images: list[tuple[int, str, bytes]] = list()
 
     async def init_appapi(self) -> bool:
         try:
@@ -60,17 +74,9 @@ class Illust:
 
         return True
 
-    def __init__(self, illust_id: int) -> None:
-        self.caption: str
-        self.title: str
-        self.author: tuple[str, int]
-        self.tags: list[tuple[str, str]]
-        self.thumb_urls: list[str]
-        self.mid_urls: list[str]
-        self.urls: list[str]
-        self.original_urls: list[str]
-        self.id: int = illust_id
-        self.__images: list[tuple[int, bytes]] = list()
+    def is_r18(self) -> bool:
+        orig_tags = [t[0] for t in self.tags]
+        return "R-18" in orig_tags
 
     async def init(self):
         login_result = await self.init_appapi()
@@ -102,23 +108,27 @@ class Illust:
     async def __download_single_image(
         self, url: str, size_hint: str, page_hint: int
     ) -> None:
-        tp: str
+        mime: str
         content: bytes
         try:
             result = []
             #! aapi.down 是一个返回 AsyncGenerator 的 Coroutine，类型检查有误
             async for v in await self.aapi.down(url, "https://app-api.pixiv.net/", True):  # type: ignore
                 result.append(v)
-            tp, content = result
+            mime, content = result
         except:
             logger.exception(f"{self.id} {size_hint} 第 {page_hint} 张下载错误")
-            raise DownloadError
+            raise DownloadError()
 
-        if tp is not None and tp.find("image") != -1:
-            self.__images.append((page_hint, content))
+        if (
+            mime is not None
+            and mime.find("image") != -1
+            and (ext := mimetypes.guess_extension(mime))
+        ):
+            self.__images.append((page_hint, ext, content))
         else:
             logger.exception(f"{self.id} {size_hint} 第 {page_hint} 张下载错误")
-            raise DownloadError
+            raise DownloadError()
 
         logger.info(f"成功下载 {self.id} {size_hint} 第 {page_hint} 张")
 
@@ -144,18 +154,18 @@ class Illust:
 
         logger.info(f"成功下载 {self.id} 全部 {size_hint} 图片")
 
-    async def download(self) -> list[bytes]:
+    async def download(self) -> list[tuple[str, bytes]]:
         await self.__download_images()
         return self.get_downloaded_images()
 
-    async def download_original(self) -> list[bytes]:
+    async def download_original(self) -> list[tuple[str, bytes]]:
         await self.__download_images(True)
         return self.get_downloaded_images()
 
-    def get_downloaded_images(self) -> list[bytes]:
+    def get_downloaded_images(self) -> list[tuple[str, bytes]]:
         if not len(self.__images):
             return []
 
         self.__images.sort(key=lambda elem: elem[0])
 
-        return [elem[1] for elem in self.__images[:9]]
+        return [elem[1:] for elem in self.__images[:9]]

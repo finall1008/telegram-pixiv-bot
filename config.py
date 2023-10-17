@@ -1,6 +1,6 @@
 import json
-import sys
 import logging
+import sys
 from typing import TypedDict
 
 logging.basicConfig(
@@ -14,10 +14,10 @@ class ConfigDict(TypedDict):
     token: str
     refresh_token: str
 
-class Config:
 
+class Config:
     def __init__(self):
-        with open('config.json', 'r') as file:
+        with open("config.json", "r") as file:
             config: ConfigDict = json.load(file)
 
         try:
