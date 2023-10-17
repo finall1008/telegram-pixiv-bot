@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from typing import Self
 
 from bs4 import BeautifulSoup
 from pixivpy_async import AppPixivAPI
@@ -73,7 +72,7 @@ class Illust:
         self.id: int = illust_id
         self.__images: list[tuple[int, bytes]] = list()
 
-    async def init(self) -> Self:
+    async def init(self):
         login_result = await self.init_appapi()
         if not login_result:
             logger.exception("Pixiv 登录失败")
@@ -87,7 +86,7 @@ class Illust:
 
         return self
 
-    def __str__(self):
+    def __str__(self) -> str:
         tags_text = str()
         for tag in self.tags:
             tags_text = (
