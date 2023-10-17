@@ -13,10 +13,18 @@ def get_dir_size(dir) -> int:
 
 
 def origin_link_button(_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup([[InlineKeyboardButton(text="原链接", url=f"https://www.pixiv.net/artworks/{_id}")]])
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    text="原链接", url=f"https://www.pixiv.net/artworks/{_id}"
+                )
+            ]
+        ]
+    )
 
 
-def get_illust_id(text: str) -> int:
+def get_illust_id(text: str) -> int | None:
     try:
         illust_id = int(text)
     except:
@@ -26,9 +34,11 @@ def get_illust_id(text: str) -> int:
 
     reg = r"pixiv.net"
     if re.search(reg, text):
+        match = re.search(r"[1-9][0-9]{7,}", text)
+        if not match:
+            return None
         try:
-            return int(re.search(r"[1-9][0-9]{7,}", text).group())
+            return int(match.group())
         except:
-            return -1
-    else:
-        return -1
+            return None
+    return None

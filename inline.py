@@ -1,10 +1,13 @@
 import logging
 from uuid import uuid4
 
-from telegram.parsemode import ParseMode
-from telegram.inline.inputtextmessagecontent import InputTextMessageContent
-from telegram import Update, InlineQueryResultPhoto, InlineQueryResultArticle
-from telegram.ext import CallbackContext
+from telegram import (
+    Update,
+    InlineQueryResultPhoto,
+    InlineQueryResultArticle,
+    InputTextMessageContent,
+)
+from telegram.ext import ContextTypes
 
 from illust import Illust
 from utilities import get_illust_id, origin_link_button
@@ -17,26 +20,31 @@ logging.basicConfig(
 logger = logging.getLogger("pixiv_bot")
 
 
-def inline_answer(update: Update, context: CallbackContext):
+async def inline_answer(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not update.inline_query:
+        return
     query = update.inline_query.query
     if not query:
         return
 
     illust_id = get_illust_id(query)
-    if illust_id == -1:
-        context.bot.answer_inline_query(
+    if not illust_id:
+        await context.bot.answer_inline_query(
             update.inline_query.id,
-            [InlineQueryResultArticle(
-                id=str(uuid4()),
-                title="输入错误，请输入 Pixiv ID 或链接",
-                input_message_content=InputTextMessageContent(
-                    "输入错误，请输入 Pixiv ID 或链接")
-            )]
+            [
+                InlineQueryResultArticle(
+                    id=str(uuid4()),
+                    title="输入错误，请输入 Pixiv ID 或链接",
+                    input_message_content=InputTextMessageContent(
+                        "输入错误，请输入 Pixiv ID 或链接"
+                    ),
+                )
+            ],
         )
         return
 
     try:
-        illust = Illust(illust_id)
+        illust = await Illust(illust_id).init()
     except:
         return
 
@@ -50,12 +58,13 @@ def inline_answer(update: Update, context: CallbackContext):
                 title=str(illust_id),
                 description=str(illust),
                 photo_url=illust.mid_urls[index],
-                thumb_url=illust.thumb_urls[index],
-                parse_mode=ParseMode.HTML
+                thumbnail_url=illust.thumb_urls[index],
+                parse_mode="HTML",
             )
         )
 
-    context.bot.answer_inline_query(
-        update.inline_query.id, results, cache_time=600)
+    await context.bot.answer_inline_query(
+        update.inline_query.id, results, cache_time=600
+    )
 
     logger.info(f"成功返回 inline 结果 {illust.id}")
